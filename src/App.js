@@ -2,21 +2,33 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import './index.css';
 import Postagem from './components/Reddit/Card/Card.js';
+import {fetchPostsFromReddit} from './api/'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 export default function App() {
-  const [reddit, setReddit] = useState([]);
+  const [hotPosts, setHotPosts] = useState([]);
+  const [newsPosts, setNewsPosts] = useState([]);
+  const [risingPosts, setRisingPosts] = useState([]);
+  const [error, setError] = useState(false);
+
 
   useEffect(async () => {
-    const response = await fetch('https://api.reddit.com/r/artificial');
-    const data = await response.json();
+    try {
+      const [hotPosts, newsPosts, risingPosts] =  await fetchPostsFromReddit();
+      setHotPosts(hotPosts.data.children)
+      setNewsPosts(newsPosts.data.children)
+      setRisingPosts(risingPosts.data.children);
+    } catch(e) {
+      setError(true);
+    }
 
-    setReddit(data.data.children);
   }, []);
+
   return (
     <div>
       <h1>REACT<span>JS</span></h1>
       <div className="container">
+        {error ? <h1>Deu erro</h1> : (
         <Tabs>
           <TabList>
             <Tab>Hot</Tab>
@@ -24,15 +36,16 @@ export default function App() {
             <Tab>Rising</Tab>
           </TabList>
           <TabPanel>
-            {(reddit != null) ? reddit.map((posts, index) => <Postagem key={index} post={posts.data} />) : ''}
+            {hotPosts.length > 0 ? hotPosts.map((post, index) => <Postagem key={index} post={post.data} />) : ''}
           </TabPanel>
           <TabPanel>
-            {(reddit != null) ? reddit.map((posts, index) => <Postagem key={index} post={posts.data} />) : ''}
+            {newsPosts.length > 0 ? newsPosts.map((post, index) => <Postagem key={index} post={post.data} />) : ''}
           </TabPanel>
           <TabPanel>
-            {(reddit != null) ? reddit.map((posts, index) => <Postagem key={index} post={posts.data} />) : ''}
+            {risingPosts.length > 0 ? risingPosts.map((post, index) => <Postagem key={index} post={post.data} />) : ''}
           </TabPanel>
         </Tabs>
+        )}
       </div>
     </div>
   );
